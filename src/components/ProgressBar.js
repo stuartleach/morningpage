@@ -9,7 +9,6 @@ const ProgressBar = (props) => {
 		<div>
 			<Progress
 				max={wordLimit}
-				// id='progress'
 				value={wordCount}
 				style={{
 					width: '100%',

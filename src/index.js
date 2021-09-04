@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom'
 //import OneThousandWords from './components/OneThousandWords';
 import App from './components/App'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import Router from './Router'
+import Router from './components/Router'
 import { AuthProvider } from './contexts/AuthContext'
 
 /* ReactDOM.render(

@@ -1,7 +1,14 @@
 import { Input } from '@chakra-ui/react'
 import React from 'react'
+// import { auth, firestore } from './firebase'
+import firebase from 'firebase'
+import { useCollectionData } from 'react-firebase-hooks/firestore'
 
 const Typewriter = (props) => {
+	// const entryRef = props.entryRef
+
+	// const [thisEntry] = useCollectionData(entryRef)
+
 	return (
 		<form action=''>
 			<Input
@@ -26,13 +33,20 @@ const Typewriter = (props) => {
 				}}
 				type='text'
 				required
-				entry={props.entryRef}
+				entry={props.entry}
 				placeholder={`${props.wordLimit} words`}
 				onChange={(e) => {
+					props.handleChange()
 					props.setEntry(() => e.target.value)
 					props.setWordCount(() => props.entry.split(' ').length)
 					props.setWordsLeft(() => props.wordLimit - props.wordCount)
 					props.setCharCount(() => props.entry.split('').length)
+					/* entryRef.add({
+						text: props.entryRef,
+						complete: false,
+						createdAt:
+							firebase.firestore.FieldValue.serverTimestamp(),
+					}) */
 				}}
 			/>
 		</form>

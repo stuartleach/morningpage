@@ -1,7 +1,10 @@
 // import Rebase from 're-base'
 
-import firebase from 'firebase/app'
+import firebase from 'firebase'
 import 'firebase/auth'
+import Rebase from 're-base'
+import 'firebase/functions'
+import 'firebase/firestore'
 
 const app = firebase.initializeApp({
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -15,7 +18,9 @@ const app = firebase.initializeApp({
 
 // console.log(app)
 
+export const base = Rebase.createClass(app.database())
 export const auth = app.auth()
+export const db = firebase.firestore()
 export default app
 
 /* 
