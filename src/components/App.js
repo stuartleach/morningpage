@@ -10,9 +10,14 @@ import {
 	Image,
 	Text,
 } from '@chakra-ui/react'
-import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
+import {
+	getAuth,
+	signInWithCustomToken,
+	signOut,
+	onAuthStateChanged,
+} from 'firebase/auth'
 import 'firebase/database'
-import { getDatabase, ref, set } from 'firebase/database'
+import { getDatabase, ref, set, update } from 'firebase/database'
 import React, { useEffect, useState } from 'react'
 import { auth, initFirebaseAuth, isUserSignedIn, signIn } from '../firebase.js'
 import theme from '../theme'
@@ -36,113 +41,125 @@ const App = (props) => {
 	const [clickCount, setClickCount] = useState(0)
 	const [userData, setUserData] = useState('')
 	const [inputRef, setInputRef] = useState('')
-	const [signedIn, setSignedIn] = useState(false)
+	const [email, setEmail] = useState('example@example.com')
 
 	initFirebaseAuth()
 	const db = getDatabase()
+	const [user, setUser] = useState(auth.currentUser)
+	const [entryPath, setEntryPath] = useState('')
+	const [uid, setUid] = useState('')
+
+	const entryIdGen = function () {
+		// Math.random should be unique because of its seeding algorithm.
+		// Convert it to base 36 (numbers + letters), and grab the first 9 characters
+		// after the decimal.
+		return '_' + Math.random().toString(36).substring(2, 9)
+	}
+
+	const [entryId, setEntryId] = useState(entryIdGen())
+
+	onAuthStateChanged(auth, (user) => {
+		if (user) {
+			setUser(user)
+			setEmail(user.email)
+			setUid(user.uid)
+			setName(user.displayName)
+		} else {
+			setUser(false)
+		}
+	})
 
 	const handleClick = async () => {
 		const db = getDatabase()
 		setClickCount((x) => x + 1)
-		set(ref(db, 'users/' + auth.currentUser.uid), {
+		set(ref(db, 'users/' + user.uid), {
 			clicks: clickCount,
 		})
 	}
 
-	const signInGoogle = async () => {
-		signIn()
-			.then(() => console.log('signing in'))
-			.catch(() => console.log("can't sign in"))
-			.then(
-				// isUserSignedIn() ? setProPicUrl(getProfilePicUrl()) : null
-				setName(auth.currentUser.displayName)
-			)
-			.then(setSignedIn(true))
-			.then(() => {
-				const dateObj = new Date()
-
-				// const uid = auth.currentUser.uid
-				const todaysPath =
-					`users/${auth.currentUser.uid}` +
-					`/` +
-					`${dateObj.getUTCFullYear()}` +
-					'_' +
-					parseInt(dateObj.getUTCMonth() + 1) +
-					'_' +
-					dateObj.getUTCDate() +
-					`}/`
-
-				set(ref(db, todaysPath), {
-					input: inputRef,
-					email: auth.currentUser.email,
-					name: auth.currentUser.displayName,
-				})
-					.then(() => {
-						console.log('data saved!')
-					})
-					.catch((error) => console.log(error))
-			})
+	const dateObj = new Date()
+	const todaysDate = () => {
+		return (
+			dateObj.getUTCFullYear().toString() +
+			parseInt(dateObj.getUTCMonth() + 1).toString() +
+			dateObj.getUTCDate().toString()
+		)
 	}
 
-	/* 	useEffect(() => {
-		const dateObj = new Date()
+	const today = todaysDate()
 
-		// const uid = auth.currentUser.uid
-		const todaysPath =
-			`users/${auth.currentUser.uid}` +
-			`/` +
-			`${dateObj.getUTCFullYear()}` +
-			'_' +
-			parseInt(dateObj.getUTCMonth() + 1) +
-			'_' +
-			dateObj.getUTCDate() +
-			`}/`
+	const signInGoogle = async () => {
+		signIn()
+			.then(() => {})
+			.then(() => console.log('signing in'))
+			.catch((error) => console.log("can't sign in" + error))
+			.then(() => {
+				const dateObj = new Date()
+				console.log()
 
-		set(ref(db, todaysPath), {
-			input: inputRef,
-			email: auth.currentUser.email,
-			name: auth.currentUser.displayName,
-		})
+				const todaysPath =
+					`users/${uid}/entries` +
+					`/` +
+					`${dateObj.getUTCFullYear()}` +
+					parseInt(dateObj.getUTCMonth() + 1) +
+					dateObj.getUTCDate() +
+					`/`
+
+				set(ref(db, `/users/${uid}/userInfo`), {
+					email: email,
+					name: name,
+				})
+
+				setEntryPath(todaysPath)
+			})
 			.then(() => {
 				console.log('data saved!')
 			})
+
 			.catch((error) => console.log(error))
-	}, [inputRef]) */
+	}
 
 	const signOutGoogle = () => {
-		signOut(auth)
-			.then(alert('signed out successfully'))
-			.catch((error) => {
-				setName(null)
-				console.log(error)
-			})
-			.then(setSignedIn(false))
+		signOut(auth).catch((error) => {
+			// setName(null)
+			console.log(error)
+		})
 	}
 
 	const handleChange = () => {
-		console.log('things have changed')
 		setWordCount(() => entry.split(' ').length)
+		const updates = {
+			entry: entry,
+			wordCount: wordCount,
+			wordsLeft: wordsLeft,
+			wordsCounted: wordsCounted,
+			charCount: charCount,
+		}
+		update(
+			ref(db, `users/${uid}/entries/${todaysDate()}/${entryId}`),
+			updates
+		)
 		document.title = wordsLeft ? wordsLeft + ' words remain' : ''
 	}
 
 	return (
 		<ChakraProvider theme={theme}>
 			<div className='OneThousandWords'>
-				{signedIn ? (
+				{user ? (
 					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
 				) : null}
 
 				<div className='vertical-center'>
 					<Box>
 						{/* <h1>{dummyText}</h1> */}
-						{!signedIn ? (
+						{!user ? (
 							<Center position='relative'>
 								<Button onClick={signInGoogle} mt='50vh'>
 									Connect with Google
 								</Button>{' '}
 							</Center>
 						) : null}
-						{signedIn ? (
+						{user ? (
 							<Box
 								position='fixed'
 								right='10px'
@@ -177,7 +194,7 @@ const App = (props) => {
 											// float='right'
 											ml='20px'
 										>
-											{getAuth().currentUser.email}
+											{email}
 										</Box>
 									</Text>
 									<Image
@@ -190,7 +207,6 @@ const App = (props) => {
 							</Box>
 						) : null}
 					</Box>
-					<Button onClick={handleClick}></Button>
 					{wordCount >= 1000 || finishedEarly ? (
 						<Center position='fixed' zIndex='500'>
 							<Center w='100vw' h='80vh'>
@@ -243,19 +259,9 @@ const App = (props) => {
 						<></>
 					)}
 
-					{signedIn ? (
+					{user ? (
 						<div className='input-wrapper container'>
 							<Center>
-								<form action=''>
-									<input
-										type='text'
-										name=''
-										id=''
-										onKeyPress={(e) => {
-											setInputRef(e.target.value)
-										}}
-									/>
-								</form>
 								<Typewriter
 									entry={entry}
 									wordLimit={wordLimit}
