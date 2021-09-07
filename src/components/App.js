@@ -10,7 +10,7 @@ import {
 	Image,
 	Text,
 } from '@chakra-ui/react'
-import { getAuth, signOut } from 'firebase/auth'
+import { getAuth, signInWithCustomToken, signOut } from 'firebase/auth'
 import 'firebase/database'
 import { getDatabase, ref, set } from 'firebase/database'
 import React, { useEffect, useState } from 'react'
@@ -32,16 +32,14 @@ const App = (props) => {
 	const [charCount, setCharCount] = useState(0)
 
 	const [proPicUrl, setProPicUrl] = useState('')
-
 	const [name, setName] = useState('')
 	const [clickCount, setClickCount] = useState(0)
 	const [userData, setUserData] = useState('')
 	const [inputRef, setInputRef] = useState('')
-
-	let uid = ''
+	const [signedIn, setSignedIn] = useState(false)
 
 	initFirebaseAuth()
-	// const db = getDatabase()
+	const db = getDatabase()
 
 	const handleClick = async () => {
 		const db = getDatabase()
@@ -59,15 +57,39 @@ const App = (props) => {
 				// isUserSignedIn() ? setProPicUrl(getProfilePicUrl()) : null
 				setName(auth.currentUser.displayName)
 			)
-		uid = auth.currentUser.uid
+			.then(setSignedIn(true))
+			.then(() => {
+				const dateObj = new Date()
+
+				// const uid = auth.currentUser.uid
+				const todaysPath =
+					`users/${auth.currentUser.uid}` +
+					`/` +
+					`${dateObj.getUTCFullYear()}` +
+					'_' +
+					parseInt(dateObj.getUTCMonth() + 1) +
+					'_' +
+					dateObj.getUTCDate() +
+					`}/`
+
+				set(ref(db, todaysPath), {
+					input: inputRef,
+					email: auth.currentUser.email,
+					name: auth.currentUser.displayName,
+				})
+					.then(() => {
+						console.log('data saved!')
+					})
+					.catch((error) => console.log(error))
+			})
 	}
 
-	useEffect(() => {
+	/* 	useEffect(() => {
 		const dateObj = new Date()
-		const db = getDatabase()
+
 		// const uid = auth.currentUser.uid
 		const todaysPath =
-			`users/${uid}` +
+			`users/${auth.currentUser.uid}` +
 			`/` +
 			`${dateObj.getUTCFullYear()}` +
 			'_' +
@@ -75,6 +97,7 @@ const App = (props) => {
 			'_' +
 			dateObj.getUTCDate() +
 			`}/`
+
 		set(ref(db, todaysPath), {
 			input: inputRef,
 			email: auth.currentUser.email,
@@ -84,19 +107,16 @@ const App = (props) => {
 				console.log('data saved!')
 			})
 			.catch((error) => console.log(error))
-	}, [inputRef])
+	}, [inputRef]) */
 
-	const signOutGoogle = async () => {
-		try {
-			signOut(auth).then(
-				alert(
-					'signed out successfully! current user is ' +
-						auth.currentUser.email
-				)
-			)
-		} catch (error) {
-			console.log(error)
-		}
+	const signOutGoogle = () => {
+		signOut(auth)
+			.then(alert('signed out successfully'))
+			.catch((error) => {
+				setName(null)
+				console.log(error)
+			})
+			.then(setSignedIn(false))
 	}
 
 	const handleChange = () => {
@@ -108,21 +128,21 @@ const App = (props) => {
 	return (
 		<ChakraProvider theme={theme}>
 			<div className='OneThousandWords'>
-				{isUserSignedIn() ? (
+				{signedIn ? (
 					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
 				) : null}
 
 				<div className='vertical-center'>
 					<Box>
 						{/* <h1>{dummyText}</h1> */}
-						{!isUserSignedIn() ? (
+						{!signedIn ? (
 							<Center position='relative'>
 								<Button onClick={signInGoogle} mt='50vh'>
 									Connect with Google
 								</Button>{' '}
 							</Center>
 						) : null}
-						{isUserSignedIn() ? (
+						{signedIn ? (
 							<Box
 								position='fixed'
 								right='10px'
@@ -223,7 +243,7 @@ const App = (props) => {
 						<></>
 					)}
 
-					{isUserSignedIn() ? (
+					{signedIn ? (
 						<div className='input-wrapper container'>
 							<Center>
 								<form action=''>
