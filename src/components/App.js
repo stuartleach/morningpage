@@ -7,111 +7,100 @@ import {
 	Button,
 	Center,
 	ChakraProvider,
+	Image,
+	Text,
 } from '@chakra-ui/react'
-import firebase from 'firebase'
+import { getAuth, signOut } from 'firebase/auth'
 import 'firebase/database'
+import { getDatabase, ref, set } from 'firebase/database'
 import React, { useEffect, useState } from 'react'
-import { AuthContext, useAuth } from '../contexts/AuthContext'
-import { auth } from '../firebase'
+import { auth, initFirebaseAuth, isUserSignedIn, signIn } from '../firebase.js'
 import theme from '../theme'
+import { contact } from './contactInfo'
 import Footer from './Footer'
 import ProgressBar from './ProgressBar'
 import Stats from './Stats'
 import Typewriter from './Typewriter'
 
 const App = (props) => {
-	const [loggedIn, setLogin] = useState(false)
 	const [entry, setEntry] = useState('entry')
 	const [wordCount, setWordCount] = useState(0)
-	const [finishedEarly, finishEarly] = useState(false)
 	const [wordLimit, setWordLimit] = useState(1000)
-	const [wordsCounted, setWordsCounted] = useState('wordsCounted')
+	const [finishedEarly, finishEarly] = useState(false)
 	const [wordsLeft, setWordsLeft] = useState('wordsLeft')
+	const [wordsCounted, setWordsCounted] = useState(0)
 	const [charCount, setCharCount] = useState(0)
-	const [contact, setContact] = useState({
-		github: 'https://github.com/stuartleach',
-		email: 'mailto:jstuartleach@gmail.com',
-		linkedin: 'https://www.linkedin.com/in/stuart-leach-69182761/',
-		spotify: 'http://bit.ly/leachmusic',
-	})
 
-	// const [user, setUser] = useState('stuartLeach')
-	const [userRef, setUser] = useState('user')
-	const [entryRef, setEntryRef] = useState('empty journal entry')
+	const [proPicUrl, setProPicUrl] = useState('')
 
-	const [users, setUsers] = useState([])
-	const [dummyText, setDummyText] = useState('old')
-	const [entries, setEntries] = useState([])
+	const [name, setName] = useState('')
+	const [clickCount, setClickCount] = useState(0)
+	const [userData, setUserData] = useState('')
+	const [inputRef, setInputRef] = useState('')
 
-	const [uid, setUid] = useState('')
+	let uid = ''
 
-	const [email, setEmail] = useState('email')
-	const [password, setPassword] = useState('password')
-	const currentUser = useAuth()
+	initFirebaseAuth()
+	// const db = getDatabase()
+
+	const handleClick = async () => {
+		const db = getDatabase()
+		setClickCount((x) => x + 1)
+		set(ref(db, 'users/' + auth.currentUser.uid), {
+			clicks: clickCount,
+		})
+	}
+
+	const signInGoogle = async () => {
+		signIn()
+			.then(() => console.log('signing in'))
+			.catch(() => console.log("can't sign in"))
+			.then(
+				// isUserSignedIn() ? setProPicUrl(getProfilePicUrl()) : null
+				setName(auth.currentUser.displayName)
+			)
+		uid = auth.currentUser.uid
+	}
 
 	useEffect(() => {
-		console.log(AuthContext)
-	})
+		const dateObj = new Date()
+		const db = getDatabase()
+		// const uid = auth.currentUser.uid
+		const todaysPath =
+			`users/${uid}` +
+			`/` +
+			`${dateObj.getUTCFullYear()}` +
+			'_' +
+			parseInt(dateObj.getUTCMonth() + 1) +
+			'_' +
+			dateObj.getUTCDate() +
+			`}/`
+		set(ref(db, todaysPath), {
+			input: inputRef,
+			email: auth.currentUser.email,
+			name: auth.currentUser.displayName,
+		})
+			.then(() => {
+				console.log('data saved!')
+			})
+			.catch((error) => console.log(error))
+	}, [inputRef])
 
-	useEffect(() => {
-		const fetchData = async () => {
-			const uid = await auth
-				.signInWithEmailAndPassword(
-					currentUser.email,
-					currentUser.password
+	const signOutGoogle = async () => {
+		try {
+			signOut(auth).then(
+				alert(
+					'signed out successfully! current user is ' +
+						auth.currentUser.email
 				)
-				.then((x) => x.user.uid)
-			const db = firebase.firestore()
-			const id = await db.collection('users').doc(uid).id
-
-			const entriesRef = await db.collection('users').doc(uid).entries
-			setEntries(entriesRef)
-			/* setDummyText(
-				doc.data().entries.entry1 + ' and my name is ' + doc.data().name
-			) */
-			// setEntries(doc.data().entries)
-			setUid(id)
-			setDummyText((x) => x + entries)
-			// const data = doc.data()
-			// setUsers(data.email)
+			)
+		} catch (error) {
+			console.log(error)
 		}
-		fetchData()
-	}, [])
-
-	useEffect(() => {
-		const fetchData = async () => {
-			const db = firebase.firestore()
-			let data = new Object()
-			data.ID = uid
-			data.ENTRY = entry
-			data.TIME = new Date()
-
-			await db.collection('users').doc(uid).update(data)
-
-			// const doc = await db.collection('users').doc(uid)
-			// console.log(doc)
-			/* 			await doc.set(
-				{
-					name: 'username',
-					entry: entry,
-				},
-				{ merge: true }
-			) */
-
-			console.log('entry is ' + entry)
-		}
-		fetchData()
-	}, [entry, uid])
-
-	// setEntry(dummyText)
+	}
 
 	const handleChange = () => {
 		console.log('things have changed')
-
-		/* 		db.collection('entries').add({
-			entry: entry,
-			users: 'stuart leach',
-		}) */
 		setWordCount(() => entry.split(' ').length)
 		document.title = wordsLeft ? wordsLeft + ' words remain' : ''
 	}
@@ -119,10 +108,69 @@ const App = (props) => {
 	return (
 		<ChakraProvider theme={theme}>
 			<div className='OneThousandWords'>
-				<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
-				<div className='vertical-center'>
-					{/* <h1>{dummyText}</h1> */}
+				{isUserSignedIn() ? (
+					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
+				) : null}
 
+				<div className='vertical-center'>
+					<Box>
+						{/* <h1>{dummyText}</h1> */}
+						{!isUserSignedIn() ? (
+							<Center position='relative'>
+								<Button onClick={signInGoogle} mt='50vh'>
+									Connect with Google
+								</Button>{' '}
+							</Center>
+						) : null}
+						{isUserSignedIn() ? (
+							<Box
+								position='fixed'
+								right='10px'
+								top='20px'
+								height='auto'
+								backgroundColor='red'
+							>
+								<Button
+									onClick={signOutGoogle}
+									width=''
+									// float='right'
+									right='10px'
+									position='fixed'
+									top='100px'
+								>
+									Sign out
+								</Button>
+								<Box
+									// float='right'
+									textAlign='right'
+									backgroundColor='pink'
+									position='relative'
+								>
+									<Text
+										fontSize='14px'
+										fontWeight='300'
+										// textAlign='left'
+										// width='100%'
+									>
+										<Box
+											fontWeight='bold'
+											// float='right'
+											ml='20px'
+										>
+											{getAuth().currentUser.email}
+										</Box>
+									</Text>
+									<Image
+										w='25px'
+										borderRadius='full'
+										src={proPicUrl}
+										ml='15px'
+									/>
+								</Box>
+							</Box>
+						) : null}
+					</Box>
+					<Button onClick={handleClick}></Button>
 					{wordCount >= 1000 || finishedEarly ? (
 						<Center position='fixed' zIndex='500'>
 							<Center w='100vw' h='80vh'>
@@ -174,9 +222,38 @@ const App = (props) => {
 					) : (
 						<></>
 					)}
-					<div className='input-wrapper container'>
-						<Center>
-							<Typewriter
+
+					{isUserSignedIn() ? (
+						<div className='input-wrapper container'>
+							<Center>
+								<form action=''>
+									<input
+										type='text'
+										name=''
+										id=''
+										onKeyPress={(e) => {
+											setInputRef(e.target.value)
+										}}
+									/>
+								</form>
+								<Typewriter
+									entry={entry}
+									wordLimit={wordLimit}
+									wordCount={wordCount}
+									wordsLeft={wordsLeft}
+									setEntry={setEntry}
+									setWordCount={setWordCount}
+									setWordsLeft={setWordsLeft}
+									charCount={charCount}
+									setCharCount={setCharCount}
+									// entryRef={entryRef}
+									handleChange={handleChange}
+								/>
+							</Center>
+
+							<Stats
+								finishEarly={finishEarly}
+								finishedEarly={finishedEarly}
 								entry={entry}
 								wordLimit={wordLimit}
 								wordCount={wordCount}
@@ -184,27 +261,11 @@ const App = (props) => {
 								setEntry={setEntry}
 								setWordCount={setWordCount}
 								setWordsLeft={setWordsLeft}
+								wordsCounted={wordsCounted}
 								charCount={charCount}
-								setCharCount={setCharCount}
-								// entryRef={entryRef}
-								handleChange={handleChange}
 							/>
-						</Center>
-
-						<Stats
-							finishEarly={finishEarly}
-							finishedEarly={finishedEarly}
-							entry={entry}
-							wordLimit={wordLimit}
-							wordCount={wordCount}
-							wordsLeft={wordsLeft}
-							setEntry={setEntry}
-							setWordCount={setWordCount}
-							setWordsLeft={setWordsLeft}
-							wordsCounted={wordsCounted}
-							charCount={charCount}
-						/>
-					</div>
+						</div>
+					) : null}
 					<Center>
 						<Box position='absolute' bottom='20px'>
 							<Footer
@@ -217,7 +278,6 @@ const App = (props) => {
 					</Center>
 				</div>
 			</div>
-			)
 		</ChakraProvider>
 	)
 }
