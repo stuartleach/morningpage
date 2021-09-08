@@ -7,7 +7,6 @@ import {
 	Button,
 	Center,
 	ChakraProvider,
-	Image,
 	Text,
 } from '@chakra-ui/react'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
@@ -45,9 +44,6 @@ const App = (props) => {
 	const [uid, setUid] = useState('')
 
 	const entryIdGen = function () {
-		// Math.random should be unique because of its seeding algorithm.
-		// Convert it to base 36 (numbers + letters), and grab the first 9 characters
-		// after the decimal.
 		return '_' + Math.random().toString(36).substring(2, 9)
 	}
 
@@ -147,7 +143,6 @@ const App = (props) => {
 
 				<div className='vertical-center'>
 					<Box>
-						{/* <h1>{dummyText}</h1> */}
 						{!user ? (
 							<Center position='relative'>
 								<Button onClick={signInGoogle} mt='50vh'>
@@ -162,28 +157,18 @@ const App = (props) => {
 								top='20px'
 								height='auto'
 							>
-								<Box
-									// float='right'
-									textAlign='right'
-									position='relative'
-									// top='50px'
-								>
+								<Box textAlign='right' position='relative'>
 									<Box
 										fontWeight='bold'
 										color='rgba(135, 169, 236, 1)'
-										// float='right'
-										// ml='20px'
 									>
 										{email}
 									</Box>
 									<Button
 										onClick={signOutGoogle}
 										width='100%'
-										// height='20px'
-
 										minHeight='4vh'
 										position='relative'
-										// opacity='0.3'
 										_hover={{ opacity: 0.5 }}
 										style={{
 											color: 'white',
@@ -196,8 +181,6 @@ const App = (props) => {
 									<Text
 										fontSize='14px'
 										fontWeight='300'
-										// textAlign='left'
-										// width='100%'
 									></Text>
 									{/* <Image
 										w='25px'
