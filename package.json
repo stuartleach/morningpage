@@ -6,6 +6,9 @@
     "@chakra-ui/react": "^1.6.6",
     "@emotion/react": "^11.4.1",
     "@emotion/styled": "^11.3.0",
+    "@firebase/auth": "^0.16.8",
+    "@firebase/firestore": "^2.3.10",
+    "@google-cloud/firestore": "^4.15.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
@@ -15,19 +18,18 @@
     "@types/react-dom": "^17.0.9",
     "bootstrap": "^5.1.0",
     "dotenv": "^8.2.0",
-    "firebase": "^8.9.1",
+    "firebase": "^9.0.1",
+    "firebase-admin": "^9.11.1",
+    "firestore": "^1.1.6",
     "framer-motion": "^4.1.17",
     "node-sass": "^6.0.1",
-    "re-base": "^4.0.0",
     "react": "^17.0.2",
     "react-bootstrap": "^1.6.1",
     "react-dom": "^17.0.2",
+    "react-firebase-hooks": "^3.0.4",
     "react-helmet": "^6.1.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.3",
-    "rebase": "^0.3.0",
-    "sass": "^1.38.0",
-    "typescript": "^4.3.5",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
@@ -59,6 +61,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/re-base": "^3.2.1"
+    "@types/re-base": "^3.2.1",
+    "firebase-tools": "^9.16.6"
   }
 }

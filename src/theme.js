@@ -35,6 +35,13 @@ const theme = extendTheme({
 			display: 'block',
 		},
 
+		input: {
+			_placeholder: {
+				fontSize: '12px',
+				color: 'green',
+			},
+		},
+
 		'.Footer': {
 			// display: 'flex',
 			// marginTop: '70vh',

@@ -11,22 +11,6 @@ const Stats = (props) => {
 	const setWordsCounted = props.setWordsCounted
 	return (
 		<div align='center'>
-			{/* <Button
-					className='btn'
-					style={{
-						color: 'white',
-						background: `linear-gradient(180deg,  rgba(135, 169, 236, 0.5),rgba(218, 194, 119, 0.377))`,
-						width: '10rem',
-					}}
-					_hover={{
-						opacity: '.2',
-					}}
-				>
-					{!showing ? 'Show stats' : null}
-					{showing ? (
-						
-					) : null}{' '}
-				</Button> */}
 			<Button
 				onClick={onToggle}
 				style={{

@@ -7,136 +7,259 @@ import {
 	Button,
 	Center,
 	ChakraProvider,
+	Image,
+	Text,
 } from '@chakra-ui/react'
-import React, { useState } from 'react'
-import { Container } from 'react-bootstrap'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
-import { AuthProvider } from '../contexts/AuthContext'
-import Dashboard from './Dashboard'
+import {
+	getAuth,
+	signInWithCustomToken,
+	signOut,
+	onAuthStateChanged,
+} from 'firebase/auth'
+import 'firebase/database'
+import { getDatabase, ref, set, update } from 'firebase/database'
+import React, { useEffect, useState } from 'react'
+import { auth, initFirebaseAuth, isUserSignedIn, signIn } from '../firebase.js'
+import theme from '../theme'
+import { contact } from './contactInfo'
 import Footer from './Footer'
-import Login from './Login'
 import ProgressBar from './ProgressBar'
-import Signup from './Signup'
 import Stats from './Stats'
 import Typewriter from './Typewriter'
-import PrivateRoute from './PrivateRoute'
-import UpdateProfile from './UpdateProfile'
-import ForgotPassword from './ForgotPassword'
-import theme from '../theme'
 
 const App = (props) => {
-	const [loggedIn, setLogin] = useState(false)
 	const [entry, setEntry] = useState('entry')
 	const [wordCount, setWordCount] = useState(0)
-	const [finishedEarly, finishEarly] = useState(false)
 	const [wordLimit, setWordLimit] = useState(1000)
-	const [wordsCounted, setWordsCounted] = useState('wordsCounted')
+	const [finishedEarly, finishEarly] = useState(false)
 	const [wordsLeft, setWordsLeft] = useState('wordsLeft')
+	const [wordsCounted, setWordsCounted] = useState(0)
 	const [charCount, setCharCount] = useState(0)
-	const [contact, setContact] = useState({
-		github: 'https://github.com/stuartleach',
-		email: 'mailto:jstuartleach@gmail.com',
-		linkedin: 'https://www.linkedin.com/in/stuart-leach-69182761/',
-		spotify: 'http://bit.ly/leachmusic',
+
+	const [proPicUrl, setProPicUrl] = useState('')
+	const [name, setName] = useState('')
+	const [clickCount, setClickCount] = useState(0)
+	const [userData, setUserData] = useState('')
+	const [inputRef, setInputRef] = useState('')
+	const [email, setEmail] = useState('example@example.com')
+
+	initFirebaseAuth()
+	const db = getDatabase()
+	const [user, setUser] = useState(auth.currentUser)
+	const [entryPath, setEntryPath] = useState('')
+	const [uid, setUid] = useState('')
+
+	const entryIdGen = function () {
+		// Math.random should be unique because of its seeding algorithm.
+		// Convert it to base 36 (numbers + letters), and grab the first 9 characters
+		// after the decimal.
+		return '_' + Math.random().toString(36).substring(2, 9)
+	}
+
+	const [entryId, setEntryId] = useState(entryIdGen())
+
+	onAuthStateChanged(auth, (user) => {
+		if (user) {
+			setUser(user)
+			setEmail(user.email)
+			setUid(user.uid)
+			setName(user.displayName)
+		} else {
+			setUser(false)
+		}
 	})
+
+	const handleClick = async () => {
+		const db = getDatabase()
+		setClickCount((x) => x + 1)
+		set(ref(db, 'users/' + user.uid), {
+			clicks: clickCount,
+		})
+	}
+
+	const dateObj = new Date()
+	const todaysDate = () => {
+		return (
+			dateObj.getUTCFullYear().toString() +
+			parseInt(dateObj.getUTCMonth() + 1).toString() +
+			dateObj.getUTCDate().toString()
+		)
+	}
+
+	const today = todaysDate()
+
+	const signInGoogle = async () => {
+		signIn()
+			.then(() => {})
+			.then(() => console.log('signing in'))
+			.catch((error) => console.log("can't sign in" + error))
+			.then(() => {
+				const dateObj = new Date()
+				console.log()
+
+				const todaysPath =
+					`users/${uid}/entries` +
+					`/` +
+					`${dateObj.getUTCFullYear()}` +
+					parseInt(dateObj.getUTCMonth() + 1) +
+					dateObj.getUTCDate() +
+					`/`
+
+				set(ref(db, `/users/${uid}/userInfo`), {
+					email: email,
+					name: name,
+				})
+
+				setEntryPath(todaysPath)
+			})
+			.then(() => {
+				console.log('data saved!')
+			})
+
+			.catch((error) => console.log(error))
+	}
+
+	const signOutGoogle = () => {
+		signOut(auth).catch((error) => {
+			// setName(null)
+			console.log(error)
+		})
+	}
 
 	const handleChange = () => {
 		setWordCount(() => entry.split(' ').length)
+		const updates = {
+			entry: entry,
+			wordCount: wordCount,
+			wordsLeft: wordsLeft,
+			wordsCounted: wordsCounted,
+			charCount: charCount,
+		}
+		update(
+			ref(db, `users/${uid}/entries/${todaysDate()}/${entryId}`),
+			updates
+		)
 		document.title = wordsLeft ? wordsLeft + ' words remain' : ''
 	}
 
 	return (
 		<ChakraProvider theme={theme}>
-			<Container className='d-flex align-items-center justify-content-center'>
-				<Router>
-					<AuthProvider>
-						<Switch>
-							<PrivateRoute
-								exact
-								path='/'
-								component={Dashboard}
-							/>
-							<PrivateRoute
-								exact
-								path='/update-profile'
-								component={UpdateProfile}
-							/>
-							<Route path='/signup' component={Signup} />
-							<Route path='/login' component={Login} />
-							<Route
-								path='/forgot-password'
-								component={ForgotPassword}
-							/>
-						</Switch>
-					</AuthProvider>
-				</Router>
-			</Container>
-
-			{!loggedIn ? (
-				<Login />
-			) : (
-				<div className='OneThousandWords'>
+			<div className='OneThousandWords'>
+				{user ? (
 					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
-					<Box
-						textAlign='right'
-						bg='blue.200'
-						w='50vh'
-						p='20px'
-					></Box>
-					<div className='vertical-center'>
-						{wordCount >= 1000 || finishedEarly ? (
-							<Center position='fixed' zIndex='500'>
-								<Center w='100vw' h='80vh'>
-									<Alert
-										status='success'
-										variant='subtle'
-										flexDirection='column'
-										justifyContent='center'
-										textAlign='center'
-										height='400px'
-										w='500px'
-										color='whiteAlpha.800'
-										borderRadius='2xl'
-										bg='linear-gradient(0deg,  rgb(135, 169, 236),rgb(218, 193, 119))'
-									>
-										<AlertIcon size='40px' mr={0} />
-										<AlertTitle mt={4} mb={1} fontSize='lg'>
-											<h2 style={{ fontSize: '1.5rem' }}>
-												Morning Pages completed!
-											</h2>
-											<Center>
-												<Box
-													textAlign='left'
-													paddingTop='20px'
-													paddingBottom='20px'
-												>
-													<p>
-														Total words: {wordCount}
-													</p>
-													<p>
-														Total characters:{' '}
-														{charCount}
-													</p>
-													<Center marginTop='20px'>
-														<Button
-															color='blackAlpha.500'
-															onClick={() =>
-																window.location.reload()
-															}
-														>
-															Restart?
-														</Button>
-													</Center>
-												</Box>
-											</Center>
-										</AlertTitle>
-										<AlertDescription maxWidth='sm'></AlertDescription>
-									</Alert>
-								</Center>
+				) : null}
+
+				<div className='vertical-center'>
+					<Box>
+						{/* <h1>{dummyText}</h1> */}
+						{!user ? (
+							<Center position='relative'>
+								<Button onClick={signInGoogle} mt='50vh'>
+									Connect with Google
+								</Button>{' '}
 							</Center>
-						) : (
-							<></>
-						)}
+						) : null}
+						{user ? (
+							<Box
+								position='fixed'
+								right='10px'
+								top='20px'
+								height='auto'
+								backgroundColor='red'
+							>
+								<Button
+									onClick={signOutGoogle}
+									width=''
+									// float='right'
+									right='10px'
+									position='fixed'
+									top='100px'
+								>
+									Sign out
+								</Button>
+								<Box
+									// float='right'
+									textAlign='right'
+									backgroundColor='pink'
+									position='relative'
+								>
+									<Text
+										fontSize='14px'
+										fontWeight='300'
+										// textAlign='left'
+										// width='100%'
+									>
+										<Box
+											fontWeight='bold'
+											// float='right'
+											ml='20px'
+										>
+											{email}
+										</Box>
+									</Text>
+									<Image
+										w='25px'
+										borderRadius='full'
+										src={proPicUrl}
+										ml='15px'
+									/>
+								</Box>
+							</Box>
+						) : null}
+					</Box>
+					{wordCount >= 1000 || finishedEarly ? (
+						<Center position='fixed' zIndex='500'>
+							<Center w='100vw' h='80vh'>
+								<Alert
+									status='success'
+									variant='subtle'
+									flexDirection='column'
+									justifyContent='center'
+									textAlign='center'
+									height='400px'
+									w='500px'
+									color='whiteAlpha.800'
+									borderRadius='2xl'
+									bg='linear-gradient(0deg,  rgb(135, 169, 236),rgb(218, 193, 119))'
+								>
+									<AlertIcon size='40px' mr={0} />
+									<AlertTitle mt={4} mb={1} fontSize='lg'>
+										<h2 style={{ fontSize: '1.5rem' }}>
+											Morning Pages completed!
+										</h2>
+										<Center>
+											<Box
+												textAlign='left'
+												paddingTop='20px'
+												paddingBottom='20px'
+											>
+												<p>Total words: {wordCount}</p>
+												<p>
+													Total characters:{' '}
+													{charCount}
+												</p>
+												<Center marginTop='20px'>
+													<Button
+														color='blackAlpha.500'
+														onClick={() =>
+															window.location.reload()
+														}
+													>
+														Restart?
+													</Button>
+												</Center>
+											</Box>
+										</Center>
+									</AlertTitle>
+									<AlertDescription maxWidth='sm'></AlertDescription>
+								</Alert>
+							</Center>
+						</Center>
+					) : (
+						<></>
+					)}
+
+					{user ? (
 						<div className='input-wrapper container'>
 							<Center>
 								<Typewriter
@@ -149,6 +272,8 @@ const App = (props) => {
 									setWordsLeft={setWordsLeft}
 									charCount={charCount}
 									setCharCount={setCharCount}
+									// entryRef={entryRef}
+									handleChange={handleChange}
 								/>
 							</Center>
 
@@ -166,19 +291,19 @@ const App = (props) => {
 								charCount={charCount}
 							/>
 						</div>
-						<Center>
-							<Box position='absolute' bottom='20px'>
-								<Footer
-									github={contact.github}
-									emailContact={contact.emailContact}
-									linkedin={contact.linkedin}
-									spotify={contact.spotify}
-								/>
-							</Box>
-						</Center>
-					</div>
+					) : null}
+					<Center>
+						<Box position='absolute' bottom='20px'>
+							<Footer
+								github={contact.github}
+								emailContact={contact.emailContact}
+								linkedin={contact.linkedin}
+								spotify={contact.spotify}
+							/>
+						</Box>
+					</Center>
 				</div>
-			)}
+			</div>
 		</ChakraProvider>
 	)
 }
