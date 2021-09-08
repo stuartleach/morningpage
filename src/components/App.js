@@ -59,6 +59,7 @@ const App = (props) => {
 			setEmail(user.email)
 			setUid(user.uid)
 			setName(user.displayName)
+			setProPicUrl(user.photoURL)
 		} else {
 			setUser(false)
 		}
@@ -160,44 +161,50 @@ const App = (props) => {
 								right='10px'
 								top='20px'
 								height='auto'
-								backgroundColor='red'
 							>
-								<Button
-									onClick={signOutGoogle}
-									width=''
-									// float='right'
-									right='10px'
-									position='fixed'
-									top='100px'
-								>
-									Sign out
-								</Button>
 								<Box
 									// float='right'
 									textAlign='right'
-									backgroundColor='pink'
 									position='relative'
+									// top='50px'
 								>
+									<Box
+										fontWeight='bold'
+										color='rgba(135, 169, 236, 1)'
+										// float='right'
+										// ml='20px'
+									>
+										{email}
+									</Box>
+									<Button
+										onClick={signOutGoogle}
+										width='100%'
+										// height='20px'
+
+										minHeight='4vh'
+										position='relative'
+										// opacity='0.3'
+										_hover={{ opacity: 0.5 }}
+										style={{
+											color: 'white',
+											background: `linear-gradient(180deg,  rgba(135, 169, 236, 0.5),rgba(218, 194, 119, 0.377))`,
+										}}
+										top='5px'
+									>
+										Sign out
+									</Button>
 									<Text
 										fontSize='14px'
 										fontWeight='300'
 										// textAlign='left'
 										// width='100%'
-									>
-										<Box
-											fontWeight='bold'
-											// float='right'
-											ml='20px'
-										>
-											{email}
-										</Box>
-									</Text>
-									<Image
+									></Text>
+									{/* <Image
 										w='25px'
 										borderRadius='full'
 										src={proPicUrl}
 										ml='15px'
-									/>
+									/> */}
 								</Box>
 							</Box>
 						) : null}
