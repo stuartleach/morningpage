@@ -38,6 +38,8 @@ const App = (props) => {
 	const [inputRef, setInputRef] = useState('')
 	const [email, setEmail] = useState('example@example.com')
 
+	const [anon, setAnon] = useState(false)
+
 	initFirebaseAuth()
 	const db = getDatabase()
 	const [user, setUser] = useState(auth.currentUser)
@@ -82,6 +84,7 @@ const App = (props) => {
 	const today = todaysDate()
 
 	const signInGoogle = async () => {
+		setAnon(false)
 		signIn()
 			.then(() => {})
 			.then(() => console.log('signing in'))
@@ -121,17 +124,19 @@ const App = (props) => {
 
 	const handleChange = () => {
 		setWordCount(() => entry.split(' ').length)
-		const updates = {
-			entry: entry,
-			wordCount: wordCount,
-			wordsLeft: wordsLeft,
-			wordsCounted: wordsCounted,
-			charCount: charCount,
+		if (!anon) {
+			const updates = {
+				entry: entry,
+				wordCount: wordCount,
+				wordsLeft: wordsLeft,
+				wordsCounted: wordsCounted,
+				charCount: charCount,
+			}
+			update(
+				ref(db, `users/${uid}/entries/${todaysDate()}/${entryId}`),
+				updates
+			)
 		}
-		update(
-			ref(db, `users/${uid}/entries/${todaysDate()}/${entryId}`),
-			updates
-		)
 		document.title = wordsLeft ? wordsLeft + ' words remain' : ''
 	}
 
@@ -146,11 +151,7 @@ const App = (props) => {
 					<Box>
 						{!user ? (
 							<Center align='center' pt='40vh'>
-								<Container
-									// bg='whatsapp.100'
-									// width='20vw'
-									align='center'
-								>
+								<Container align='center'>
 									<Box display='block' margin='0 auto'>
 										<Button
 											onClick={signInGoogle}
@@ -176,7 +177,9 @@ const App = (props) => {
 									<Box>
 										<Button
 											onClick={() =>
-												signInAnonymously(auth)
+												signInAnonymously(auth).then(
+													() => setAnon(true)
+												)
 											}
 											color='white'
 											style={{
