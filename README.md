@@ -1,4 +1,4 @@
-
+![Journal Logo](pexels-jessica-lewis-606539.jpeg)
 
 ## Morning Page is based on Julia Cameron's ['Morning Page'](https://juliacameronlive.com/basic-tools/morning-pages/)
 ### To-do
