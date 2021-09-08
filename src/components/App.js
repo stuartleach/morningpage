@@ -10,16 +10,11 @@ import {
 	Image,
 	Text,
 } from '@chakra-ui/react'
-import {
-	getAuth,
-	signInWithCustomToken,
-	signOut,
-	onAuthStateChanged,
-} from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import 'firebase/database'
 import { getDatabase, ref, set, update } from 'firebase/database'
-import React, { useEffect, useState } from 'react'
-import { auth, initFirebaseAuth, isUserSignedIn, signIn } from '../firebase.js'
+import React, { useState } from 'react'
+import { auth, initFirebaseAuth, signIn } from '../firebase.js'
 import theme from '../theme'
 import { contact } from './contactInfo'
 import Footer from './Footer'
