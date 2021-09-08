@@ -7,9 +7,10 @@ import {
 	Button,
 	Center,
 	ChakraProvider,
+	Container,
 	Text,
 } from '@chakra-ui/react'
-import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth'
 import 'firebase/database'
 import { getDatabase, ref, set, update } from 'firebase/database'
 import React, { useState } from 'react'
@@ -144,10 +145,57 @@ const App = (props) => {
 				<div className='vertical-center'>
 					<Box>
 						{!user ? (
-							<Center position='relative'>
-								<Button onClick={signInGoogle} mt='50vh'>
-									Connect with Google
-								</Button>{' '}
+							<Center align='center' pt='40vh'>
+								<Container
+									// bg='whatsapp.100'
+									// width='20vw'
+									align='center'
+								>
+									<Box display='block' margin='0 auto'>
+										<Button
+											onClick={signInGoogle}
+											align='center'
+											color='white'
+											style={{
+												background:
+													'linear-gradient(0deg  ,rgb(218, 193, 119,0.5),rgb(135, 169, 236, 0.5))',
+											}}
+											_hover={{ opacity: 0.5 }}
+										>
+											Sign in with Google
+										</Button>
+										<Text
+											fontSize='.75em'
+											// textAlign='center'
+											mt='10px'
+											mb='30px'
+										>
+											✅ Data will be saved.
+										</Text>
+									</Box>
+									<Box>
+										<Button
+											onClick={() =>
+												signInAnonymously(auth)
+											}
+											color='white'
+											style={{
+												background:
+													'linear-gradient(0deg  ,rgb(218, 193, 119,0.5),rgb(135, 169, 236, 0.5))',
+											}}
+											_hover={{ opacity: 0.5 }}
+										>
+											Use Anonymously
+										</Button>
+										<Text
+											fontSize='.75em'
+											// textAlign='center'
+											mt='10px'
+										>
+											🚨 Data will <em>not</em> be saved.
+										</Text>
+									</Box>
+								</Container>
 							</Center>
 						) : null}
 						{user ? (
