@@ -83,6 +83,32 @@ const App = (props) => {
 
 	const today = todaysDate()
 
+	const mostCommonWords = (entry) => {
+		let results = []
+		let entryObj = {}
+		let entryArray = entry.split(' ')
+		entryArray.forEach((x) => {
+			if (!entryObj.hasOwnProperty(x)) {
+				entryObj[x] = 1
+			} else {
+				entryObj[x] += 1
+			}
+		})
+
+		const values = Object.keys(entryObj)
+			.sort((a, b) => entryObj[a] - entryObj[b])
+			.map((x) => results.push(x))
+
+		// return sorted
+		// sorted.map((x) => results.push(x))
+		// return results
+	}
+
+	const testEntry =
+		'hi this is a test entry let us see see see test entry if this works is is see'
+
+	console.log(mostCommonWords(testEntry))
+
 	const signInGoogle = async () => {
 		setAnon(false)
 		signIn()
