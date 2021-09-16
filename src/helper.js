@@ -1,4 +1,27 @@
-let n = {
+const uselessString =
+	'this is was are be have had were can said use do will would make like has look write go see could been call am find did get come made may take know live give think say help tell follow came want show set put does must ask went read need move try change play spell found study learn should add keep start thought saw turn might close seem open begin got run walk began grow took carry hear stop miss eat watch let cut talk being leave of to in for on with at from by about into down over after through between under along until without not when there how up out then so no first now only very just where much before too also around well here why again off away near below last never always together often once later far really almost sometimes soon he a one all an each other many some two more long new little most good great right mean old any same three small another large big even such different kind still high every own light left few next hard both important white four second enough above young word time number way people water day part sound workplace year back thing name sentence man line boy farm end men land home hand picture air animal house page letter point mother answer America world food country plant school father tree city earth eye head story example life paper group children side feet car mile night sea river state book idea face Indian girl mountain list song family'
+const useless = uselessString.split(' ')
+
+const sortByFreq = (entry) => {
+	const myObj = {}
+	entry = entry.split(' ')
+	entry.forEach((x, i, arr) => {
+		x = x.toLowerCase()
+		if (myObj.hasOwnProperty(x)) {
+			myObj[x] += 1
+		} else {
+			myObj[x] = 1
+		}
+	})
+	const ordered = Object.entries(myObj)
+		.sort((a, b) => b[1] - a[1])
+		.map((x) => x[0])
+	return ordered.filter((x) => !useless.includes(x))
+}
+
+export default sortByFreq
+
+/* let n = {
 	0: 'zero',
 	1: 'one',
 	2: 'two',
@@ -86,8 +109,8 @@ const numToString = (num) => {
 			n[hundreds[2]]
 	}
 
-	return result
-	/*
+	return result */
+/*
 	let noOfDigits = num.toString().length;
 	const doOne = (y) => {
 		if (y < 1) {
@@ -164,8 +187,6 @@ const numToString = (num) => {
 	return digitTester[noOfDigits].replace(/\s+/g, ' ');
 
 	*/
-}
-console.log(numToString(1129114))
 
 // console.log(numToString(100090));
 // numToString(100090);

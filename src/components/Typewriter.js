@@ -21,12 +21,13 @@ const Typewriter = (props) => {
 					color: 'white',
 					backgroundColor: 'transparent',
 					boxShadow: 'none',
-					textAlign: 'center',
-					caretColor: 'transparent',
+					textAlign: 'right',
+					caretShape: 'block',
 					fontSize: '9vw',
 				}}
 				type='text'
 				required
+				autoFocus
 				entry={props.entry}
 				placeholder={`${props.wordLimit} words`}
 				onChange={(e) => {

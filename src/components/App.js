@@ -13,7 +13,7 @@ import {
 import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth'
 import 'firebase/database'
 import { getDatabase, ref, set, update } from 'firebase/database'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { auth, initFirebaseAuth, signIn } from '../firebase.js'
 import theme from '../theme'
 import { contact } from './contactInfo'
@@ -21,6 +21,8 @@ import Footer from './Footer'
 import ProgressBar from './ProgressBar'
 import Stats from './Stats'
 import Typewriter from './Typewriter'
+
+import sortByFreq from '../helper.js'
 
 const App = (props) => {
 	const [entry, setEntry] = useState('entry')
@@ -37,6 +39,7 @@ const App = (props) => {
 	const [userData, setUserData] = useState('')
 	const [inputRef, setInputRef] = useState('')
 	const [email, setEmail] = useState('example@example.com')
+	const [topWords, setTopWords] = useState('')
 
 	const [anon, setAnon] = useState(false)
 
@@ -64,14 +67,6 @@ const App = (props) => {
 		}
 	})
 
-	const handleClick = async () => {
-		const db = getDatabase()
-		setClickCount((x) => x + 1)
-		set(ref(db, 'users/' + user.uid), {
-			clicks: clickCount,
-		})
-	}
-
 	const dateObj = new Date()
 	const todaysDate = () => {
 		return (
@@ -81,33 +76,13 @@ const App = (props) => {
 		)
 	}
 
-	const today = todaysDate()
+	// const today = todaysDate()
 
 	const mostCommonWords = (entry) => {
-		let results = []
-		let entryObj = {}
-		let entryArray = entry.split(' ')
-		entryArray.forEach((x) => {
-			if (!entryObj.hasOwnProperty(x)) {
-				entryObj[x] = 1
-			} else {
-				entryObj[x] += 1
-			}
-		})
-
-		const values = Object.keys(entryObj)
-			.sort((a, b) => entryObj[a] - entryObj[b])
-			.map((x) => results.push(x))
-
-		// return sorted
-		// sorted.map((x) => results.push(x))
-		// return results
+		return sortByFreq(entry).splice(0, 5)
 	}
 
-	const testEntry =
-		'hi this is a test entry let us see see see test entry if this works is is see'
-
-	console.log(mostCommonWords(testEntry))
+	// useEffect((entry) => setTopWords(mostCommonWords('' + entry)), [entry])
 
 	const signInGoogle = async () => {
 		setAnon(false)
@@ -118,7 +93,6 @@ const App = (props) => {
 			.then(() => {
 				const dateObj = new Date()
 				console.log()
-
 				const todaysPath =
 					`users/${uid}/entries` +
 					`/` +
@@ -126,12 +100,10 @@ const App = (props) => {
 					parseInt(dateObj.getUTCMonth() + 1) +
 					dateObj.getUTCDate() +
 					`/`
-
 				set(ref(db, `/users/${uid}/userInfo`), {
 					email: email,
 					name: name,
 				})
-
 				setEntryPath(todaysPath)
 			})
 			.then(() => {
@@ -143,13 +115,13 @@ const App = (props) => {
 
 	const signOutGoogle = () => {
 		signOut(auth).catch((error) => {
-			// setName(null)
 			console.log(error)
 		})
 	}
 
 	const handleChange = () => {
 		setWordCount(() => entry.split(' ').length)
+		setTopWords(mostCommonWords('' + entry))
 		if (!anon) {
 			const updates = {
 				entry: entry,
@@ -172,7 +144,6 @@ const App = (props) => {
 				{user ? (
 					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
 				) : null}
-
 				<div className='vertical-center'>
 					<Box>
 						{!user ? (
@@ -260,11 +231,11 @@ const App = (props) => {
 										fontWeight='300'
 									></Text>
 									{/* <Image
-										w='25px'
-										borderRadius='full'
-										src={proPicUrl}
-										ml='15px'
-									/> */}
+											w='25px'
+											borderRadius='full'
+											src={proPicUrl}
+											ml='15px'
+										/> */}
 								</Box>
 							</Box>
 						) : null}
@@ -320,7 +291,6 @@ const App = (props) => {
 					) : (
 						<></>
 					)}
-
 					{user ? (
 						<div className='input-wrapper container'>
 							<Center>
@@ -338,7 +308,6 @@ const App = (props) => {
 									handleChange={handleChange}
 								/>
 							</Center>
-
 							<Stats
 								finishEarly={finishEarly}
 								finishedEarly={finishedEarly}
@@ -351,6 +320,7 @@ const App = (props) => {
 								setWordsLeft={setWordsLeft}
 								wordsCounted={wordsCounted}
 								charCount={charCount}
+								topWords={topWords}
 							/>
 						</div>
 					) : null}
