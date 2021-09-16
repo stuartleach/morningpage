@@ -13,7 +13,7 @@ import {
 import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth'
 import 'firebase/database'
 import { getDatabase, ref, set, update } from 'firebase/database'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { auth, initFirebaseAuth, signIn } from '../firebase.js'
 import theme from '../theme'
 import { contact } from './contactInfo'
@@ -22,12 +22,14 @@ import ProgressBar from './ProgressBar'
 import Stats from './Stats'
 import Typewriter from './Typewriter'
 
+import sortByFreq from '../helper.js'
+
 const App = (props) => {
 	const [entry, setEntry] = useState('entry')
 	const [wordCount, setWordCount] = useState(0)
 	const [wordLimit, setWordLimit] = useState(1000)
 	const [finishedEarly, finishEarly] = useState(false)
-	const [wordsLeft, setWordsLeft] = useState('wordsLeft')
+	const [wordsLeft, setWordsLeft] = useState(wordLimit)
 	const [wordsCounted, setWordsCounted] = useState(0)
 	const [charCount, setCharCount] = useState(0)
 
@@ -37,8 +39,9 @@ const App = (props) => {
 	const [userData, setUserData] = useState('')
 	const [inputRef, setInputRef] = useState('')
 	const [email, setEmail] = useState('example@example.com')
+	const [topWords, setTopWords] = useState('')
 
-	const [anon, setAnon] = useState(false)
+	const [anon, setAnon] = useState(true)
 
 	initFirebaseAuth()
 	const db = getDatabase()
@@ -64,14 +67,6 @@ const App = (props) => {
 		}
 	})
 
-	const handleClick = async () => {
-		const db = getDatabase()
-		setClickCount((x) => x + 1)
-		set(ref(db, 'users/' + user.uid), {
-			clicks: clickCount,
-		})
-	}
-
 	const dateObj = new Date()
 	const todaysDate = () => {
 		return (
@@ -81,7 +76,13 @@ const App = (props) => {
 		)
 	}
 
-	const today = todaysDate()
+	// const today = todaysDate()
+
+	const mostCommonWords = (entry) => {
+		return sortByFreq(entry).splice(0, 5)
+	}
+
+	// useEffect((entry) => setTopWords(mostCommonWords('' + entry)), [entry])
 
 	const signInGoogle = async () => {
 		setAnon(false)
@@ -92,7 +93,6 @@ const App = (props) => {
 			.then(() => {
 				const dateObj = new Date()
 				console.log()
-
 				const todaysPath =
 					`users/${uid}/entries` +
 					`/` +
@@ -100,12 +100,10 @@ const App = (props) => {
 					parseInt(dateObj.getUTCMonth() + 1) +
 					dateObj.getUTCDate() +
 					`/`
-
 				set(ref(db, `/users/${uid}/userInfo`), {
 					email: email,
 					name: name,
 				})
-
 				setEntryPath(todaysPath)
 			})
 			.then(() => {
@@ -117,13 +115,25 @@ const App = (props) => {
 
 	const signOutGoogle = () => {
 		signOut(auth).catch((error) => {
-			// setName(null)
 			console.log(error)
 		})
 	}
 
+	useEffect(() => {
+		if (entry === '') {
+			setWordCount(0)
+			setCharCount(0)
+			setWordsLeft(1000)
+		} else {
+			setCharCount(() => entry.split('').length)
+			setWordCount(() => entry.split(' ').length - 1)
+			setWordsLeft(() => wordLimit - entry.split(' ').length)
+		}
+	}, [entry])
+
 	const handleChange = () => {
-		setWordCount(() => entry.split(' ').length)
+		// setWordCount(() => entry.split(' ').length)
+		setTopWords(mostCommonWords('' + entry))
 		if (!anon) {
 			const updates = {
 				entry: entry,
@@ -146,7 +156,6 @@ const App = (props) => {
 				{user ? (
 					<ProgressBar wordCount={wordCount} wordLimit={wordLimit} />
 				) : null}
-
 				<div className='vertical-center'>
 					<Box>
 						{!user ? (
@@ -234,11 +243,11 @@ const App = (props) => {
 										fontWeight='300'
 									></Text>
 									{/* <Image
-										w='25px'
-										borderRadius='full'
-										src={proPicUrl}
-										ml='15px'
-									/> */}
+											w='25px'
+											borderRadius='full'
+											src={proPicUrl}
+											ml='15px'
+										/> */}
 								</Box>
 							</Box>
 						) : null}
@@ -294,7 +303,6 @@ const App = (props) => {
 					) : (
 						<></>
 					)}
-
 					{user ? (
 						<div className='input-wrapper container'>
 							<Center>
@@ -312,7 +320,6 @@ const App = (props) => {
 									handleChange={handleChange}
 								/>
 							</Center>
-
 							<Stats
 								finishEarly={finishEarly}
 								finishedEarly={finishedEarly}
@@ -325,6 +332,7 @@ const App = (props) => {
 								setWordsLeft={setWordsLeft}
 								wordsCounted={wordsCounted}
 								charCount={charCount}
+								topWords={topWords}
 							/>
 						</div>
 					) : null}

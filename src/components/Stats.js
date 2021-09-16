@@ -1,5 +1,7 @@
-import { Box, Button, Slide, useDisclosure } from '@chakra-ui/react'
+import { Box, Button, Slide, useDisclosure, Flex } from '@chakra-ui/react'
 import React, { useState } from 'react'
+
+import { SimpleGrid, Text } from '@chakra-ui/layout'
 
 const Stats = (props) => {
 	const { isOpen, onToggle } = useDisclosure()
@@ -28,7 +30,7 @@ const Stats = (props) => {
 				{isOpen ? <div>Hide Stats</div> : <div>Show Stats</div>}
 			</Button>
 			<Button
-				onClick={onToggle}
+				// onClick={onToggle}
 				style={{
 					color: 'white',
 					background: `linear-gradient(180deg,  rgba(135, 169, 236, 0.5),rgba(218, 194, 119, 0.377))`,
@@ -57,26 +59,48 @@ const Stats = (props) => {
 					<div
 						className='statLines'
 						style={{
-							textAlign: 'left',
-							width: '40wh',
+							// textAlign: 'left',
+							maxWidth: '40wh',
+							minWidth: '100px',
 						}}
 					>
-						<p>
-							words remaining:
-							<span> {wordsLeft}</span>
-						</p>
-						<p>
-							word count:
-							<span> {wordCount}</span>
-						</p>
-						<p>
-							character count:
-							<span> {charCount}</span>
-						</p>
-						{/* <p>
-							most popular words:
-							<span></span>
-						</p> */}
+						<SimpleGrid
+							columns={2}
+							spacingX='40px'
+							spacingY='20px'
+							textAlign='left'
+						>
+							<Box minWidth='100px' padding='20px'>
+								<p>
+									words remaining:
+									<span> {wordsLeft}</span>
+								</p>
+								<p>
+									word count:
+									<span> {wordCount}</span>
+								</p>
+								<p>
+									character count:
+									<span> {charCount}</span>
+								</p>
+							</Box>
+							<Box minWidth='100px' padding='20px'>
+								<p>
+									most frequent uncommon words:
+									<Text fontWeight='300'>
+										<ol>
+											{props.topWords
+												? props.topWords.map(
+														(element) => (
+															<li>{element}</li>
+														)
+												  )
+												: null}
+										</ol>
+									</Text>
+								</p>
+							</Box>
+						</SimpleGrid>
 					</div>
 				</Box>
 			</Slide>
