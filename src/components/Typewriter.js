@@ -8,11 +8,7 @@ const Typewriter = (props) => {
 			onSubmit={(x) => x.preventDefault()}
 			onChange={(e) => {
 				props.setEntry(() => e.target.value)
-				props.setCharCount(() => props.entry.split('').length)
-				props.setWordCount(() => props.entry.split(' ').length - 1)
-				props.setWordsLeft(
-					() => props.wordLimit - props.entry.split(' ').length
-				)
+
 				props.handleChange()
 			}}
 		>
