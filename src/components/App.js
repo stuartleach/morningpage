@@ -29,7 +29,7 @@ const App = (props) => {
 	const [wordCount, setWordCount] = useState(0)
 	const [wordLimit, setWordLimit] = useState(1000)
 	const [finishedEarly, finishEarly] = useState(false)
-	const [wordsLeft, setWordsLeft] = useState('wordsLeft')
+	const [wordsLeft, setWordsLeft] = useState(wordLimit)
 	const [wordsCounted, setWordsCounted] = useState(0)
 	const [charCount, setCharCount] = useState(0)
 
@@ -41,7 +41,7 @@ const App = (props) => {
 	const [email, setEmail] = useState('example@example.com')
 	const [topWords, setTopWords] = useState('')
 
-	const [anon, setAnon] = useState(false)
+	const [anon, setAnon] = useState(true)
 
 	initFirebaseAuth()
 	const db = getDatabase()
@@ -119,8 +119,20 @@ const App = (props) => {
 		})
 	}
 
+	useEffect(() => {
+		if (entry === '') {
+			setWordCount(0)
+			setCharCount(0)
+			setWordsLeft(1000)
+		} else {
+			setCharCount(() => entry.split('').length)
+			setWordCount(() => entry.split(' ').length - 1)
+			setWordsLeft(() => wordLimit - entry.split(' ').length)
+		}
+	}, [entry])
+
 	const handleChange = () => {
-		setWordCount(() => entry.split(' ').length)
+		// setWordCount(() => entry.split(' ').length)
 		setTopWords(mostCommonWords('' + entry))
 		if (!anon) {
 			const updates = {

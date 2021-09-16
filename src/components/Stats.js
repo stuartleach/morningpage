@@ -30,7 +30,7 @@ const Stats = (props) => {
 				{isOpen ? <div>Hide Stats</div> : <div>Show Stats</div>}
 			</Button>
 			<Button
-				onClick={onToggle}
+				// onClick={onToggle}
 				style={{
 					color: 'white',
 					background: `linear-gradient(180deg,  rgba(135, 169, 236, 0.5),rgba(218, 194, 119, 0.377))`,

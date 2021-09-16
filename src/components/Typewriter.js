@@ -1,11 +1,21 @@
 import { Input } from '@chakra-ui/react'
 import React from 'react'
-// import { auth, firestore } from './firebase'
-import { useCollectionData } from 'react-firebase-hooks/firestore'
 
 const Typewriter = (props) => {
 	return (
-		<form action='' onSubmit={(x) => x.preventDefault()}>
+		<form
+			action=''
+			onSubmit={(x) => x.preventDefault()}
+			onChange={(e) => {
+				props.setEntry(() => e.target.value)
+				props.setCharCount(() => props.entry.split('').length)
+				props.setWordCount(() => props.entry.split(' ').length - 1)
+				props.setWordsLeft(
+					() => props.wordLimit - props.entry.split(' ').length
+				)
+				props.handleChange()
+			}}
+		>
 			<Input
 				className='main centered'
 				style={{
@@ -30,19 +40,7 @@ const Typewriter = (props) => {
 				autoFocus
 				entry={props.entry}
 				placeholder={`${props.wordLimit} words`}
-				onChange={(e) => {
-					props.handleChange()
-					props.setEntry(() => e.target.value)
-					props.setWordCount(() => props.entry.split(' ').length)
-					props.setWordsLeft(() => props.wordLimit - props.wordCount)
-					props.setCharCount(() => props.entry.split('').length)
-					/* entryRef.add({
-						text: props.entryRef,
-						complete: false,
-						createdAt:
-							firebase.firestore.FieldValue.serverTimestamp(),
-					}) */
-				}}
+				// onKeyPressCapture={}
 			/>
 		</form>
 	)
